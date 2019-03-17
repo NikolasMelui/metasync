@@ -3,10 +3,11 @@
 const metasync = require('..');
 const metatests = require('metatests');
 
-metatests.test('successful series', test => {
+metatests.test('successful series with array', test => {
   const arr = [1, 2, 3, 4];
   const expectedElements = arr;
   const elements = [];
+
   metasync.series(
     arr,
     (el, callback) => {
@@ -21,6 +22,25 @@ metatests.test('successful series', test => {
   );
 });
 
+metatests.test('successful series with another iterable', test => {
+  const set = new Set([1, 2, 3, 4]);
+  const expectedElements = set;
+  const elements = [];
+
+  metasync.series(
+    set,
+    (el, callback) => {
+      elements.push(el);
+      callback(null);
+    },
+    err => {
+      test.error(err);
+      test.strictSame(elements, [...expectedElements]);
+      test.end();
+    }
+  );
+});
+
 metatests.test('series with error', test => {
   const arr = [1, 2, 3, 4];
   const expectedElements = [1, 2];
@@ -28,7 +48,7 @@ metatests.test('series with error', test => {
 
   const elements = [];
   let count = 0;
-  const seriesError = new Error('seriesError');
+  const seriesError = new Error('Series error');
 
   metasync.series(
     arr,
@@ -42,8 +62,9 @@ metatests.test('series with error', test => {
       }
     },
     err => {
-      test.strictSame(err, seriesError);
+      test.isError(err, seriesError);
       test.strictSame(elements, expectedElements);
+      test.strictSame(count, expectedElementsCount);
       test.end();
     }
   );

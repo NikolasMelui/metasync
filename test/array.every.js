@@ -26,23 +26,23 @@ const fewStrictSameResult = (inOutPairs, test) => {
 
 metatests.test('every with error', test => {
   const data = [1, 2, 3];
-  const everyErr = new Error('Every error');
+  const everyError = new Error('Every error');
 
   const predicate = (item, callback) => {
     process.nextTick(() =>
-      item % 2 === 0 ? callback(everyErr) : callback(null, true)
+      item % 2 === 0 ? callback(everyError) : callback(null, true)
     );
   };
 
   metasync.every(data, predicate, err => {
-    test.strictSame(err, everyErr);
+    test.isError(err, everyError);
     test.end();
   });
 });
 
-metatests.test('every with empty array', test =>
-  strictSameResult([], true, test, () => test.end())
-);
+metatests.test('every with empty', test => {
+  strictSameResult([], true, test, () => test.end());
+});
 
 metatests.test('every with one-element arrays', test =>
   fewStrictSameResult([[[false], false], [[true], true]], test)
@@ -60,14 +60,26 @@ metatests.test('every with two-element arrays', test =>
   )
 );
 
-metatests.test('every', test => {
-  const data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+const arr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
 
-  const predicate = (item, callback) => {
+metatests.test('every with array', test => {
+  const predicate = (item, callback) =>
     process.nextTick(() => callback(null, item > 0));
-  };
 
-  metasync.every(data, predicate, (err, result) => {
+  metasync.every(arr, predicate, (err, result) => {
+    test.error(err);
+    test.strictSame(result, true);
+    test.end();
+  });
+});
+
+metatests.test('every with another iterable', test => {
+  const set = new Set(arr);
+
+  const predicate = (item, callback) =>
+    process.nextTick(() => callback(null, item > 0));
+
+  metasync.every(set, predicate, (err, result) => {
     test.error(err);
     test.strictSame(result, true);
     test.end();

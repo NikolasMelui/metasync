@@ -3,18 +3,32 @@
 const metasync = require('..');
 const metatests = require('metatests');
 
-metatests.test('succesfull map', test => {
-  test.plan(2);
-
+metatests.test('successful asyncMap with array', test => {
   const arr = [1, 2, 3];
   const expectedArr = [2, 4, 6];
 
   metasync.asyncMap(
     arr,
-    item => item * 2,
+    (item, callback) => process.nextTick(() => callback(null, item * 2)),
     (err, newArr) => {
       test.error(err);
       test.strictSame(newArr, expectedArr);
+      test.end();
+    }
+  );
+});
+
+metatests.test('successful asyncMap with another iterable', test => {
+  const set = new Set([1, 2, 3]);
+  const expectedSet = new Set([2, 4, 6]);
+
+  metasync.asyncMap(
+    set,
+    (item, callback) => process.nextTick(() => callback(null, item * 2)),
+    (err, newSet) => {
+      test.error(err);
+      test.strictSame([...newSet], [...expectedSet]);
+      test.end();
     }
   );
 });
@@ -24,7 +38,7 @@ const doSmth = time => {
   while (Date.now() - begin < time);
 };
 
-metatests.test('Non-blocking', test => {
+metatests.test('asyncMap non-blocking', test => {
   const ITEM_TIME = 1;
   const TIMER_TIME = 9;
   const ARRAY_SIZE = 1000;
@@ -38,7 +52,10 @@ metatests.test('Non-blocking', test => {
   const begin = Date.now();
   metasync.asyncMap(
     arr,
-    () => doSmth(ITEM_TIME),
+    (x, callback) => {
+      doSmth(ITEM_TIME);
+      callback();
+    },
     { percent: EXPECTED_PERCENT },
     () => {
       clearInterval(timer);
@@ -51,4 +68,31 @@ metatests.test('Non-blocking', test => {
       test.end();
     }
   );
+});
+
+metatests.test('asyncMap with error', test => {
+  const arr = [1, 2, 3];
+  const asyncMapError = new Error('asyncMap error');
+
+  metasync.asyncMap(
+    arr,
+    (x, callback) =>
+      process.nextTick(() => callback(x === 2 ? asyncMapError : null, x * x)),
+    (err, res) => {
+      test.isError(err, asyncMapError);
+      test.assertNot(res);
+      test.end();
+    }
+  );
+});
+
+metatests.test('asyncMap with not iterable', test => {
+  const obj = { a: '1', b: '2', c: '3' };
+  const expectedError = new TypeError('"items" argument is not iterable');
+
+  metasync.asyncMap(obj, test.mustNotCall(), (err, res) => {
+    test.isError(err, expectedError);
+    test.assertNot(res);
+    test.end();
+  });
 });

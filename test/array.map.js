@@ -3,7 +3,7 @@
 const metasync = require('..');
 const metatests = require('metatests');
 
-metatests.test('succesfull map', test => {
+metatests.test('successful map with array', test => {
   const arr = [1, 2, 3];
   const expectedArr = [1, 4, 9];
 
@@ -18,19 +18,30 @@ metatests.test('succesfull map', test => {
   );
 });
 
-metatests.test('map with empty array', test => {
-  const arr = [];
-  const expectedArr = [];
+metatests.test('successful map with another iterable', test => {
+  const set = new Set([1, 2, 3]);
+  const expectedSet = new Set([1, 4, 9]);
 
   metasync.map(
-    arr,
+    set,
     (x, callback) => process.nextTick(() => callback(null, x * x)),
     (err, res) => {
       test.error(err);
-      test.strictSame(res, expectedArr);
+      test.strictSame([...res], [...expectedSet]);
       test.end();
     }
   );
+});
+
+metatests.test('map with empty', test => {
+  const arr = [];
+  const expectedArr = [];
+
+  metasync.map(arr, test.mustNotCall(), (err, res) => {
+    test.error(err);
+    test.strictSame(res, expectedArr);
+    test.end();
+  });
 });
 
 metatests.test('map with error', test => {
@@ -50,9 +61,20 @@ metatests.test('map with error', test => {
         callback(null, x * x);
       }),
     (err, res) => {
-      test.strictSame(err, mapError);
+      test.isError(err, mapError);
       test.strictSame(res, undefined);
       test.end();
     }
   );
+});
+
+metatests.test('map with not iterable', test => {
+  const obj = { a: '1', b: '2', c: '3' };
+  const expectedError = new TypeError('"items" argument is not iterable');
+
+  metasync.map(obj, test.mustNotCall(), (err, res) => {
+    test.isError(err, expectedError);
+    test.strictSame(res, undefined);
+    test.end();
+  });
 });
