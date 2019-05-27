@@ -94,7 +94,7 @@ metatests.test('filter with error', test => {
 
 metatests.test('filter with not iterable', test => {
   const obj = { a: '1', b: '2', c: '3' };
-  const expectedError = new TypeError('"items" argument is not iterable');
+  const expectedError = new TypeError('Base is not Iterable');
 
   metasync.filter(obj, test.mustNotCall(), (err, res) => {
     test.isError(err, expectedError);
