@@ -70,15 +70,11 @@ metatests.test('reduce empty items without initial', test => {
 metatests.test('reduce single-element array without initial', test => {
   const arr = [2];
 
-  metasync.reduce(
-    arr,
-    (prev, cur, callback) => process.nextTick(() => callback(null, prev + cur)),
-    (err, res) => {
-      test.error(err);
-      test.strictSame(res, 2);
-      test.end();
-    }
-  );
+  metasync.reduce(arr, test.mustNotCall(), (err, res) => {
+    test.error(err);
+    test.strictSame(res, 2);
+    test.end();
+  });
 });
 
 metatests.test('reduce without initial', test => {

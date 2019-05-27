@@ -57,7 +57,7 @@ metatests.test('find with empty', test => {
   });
 });
 
-metatests.test('find without element which is searching', test => {
+metatests.test('find without the desired element', test => {
   metasync.find(
     arr,
     (el, callback) => process.nextTick(() => callback(null, el === 20)),
