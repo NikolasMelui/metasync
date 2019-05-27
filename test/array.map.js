@@ -70,11 +70,11 @@ metatests.test('map with error', test => {
 
 metatests.test('map with not iterable', test => {
   const obj = { a: '1', b: '2', c: '3' };
-  const expectedError = new TypeError('Base is not Iterable');
 
-  metasync.map(obj, test.mustNotCall(), (err, res) => {
-    test.isError(err, expectedError);
-    test.strictSame(res, undefined);
-    test.end();
-  });
+  test.throws(
+    () => metasync.map(obj, test.mustNotCall(), test.mustNotCall()),
+    new TypeError('Base is not Iterable')
+  );
+
+  test.end();
 });

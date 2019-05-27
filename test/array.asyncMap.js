@@ -88,11 +88,11 @@ metatests.test('asyncMap with error', test => {
 
 metatests.test('asyncMap with not iterable', test => {
   const obj = { a: '1', b: '2', c: '3' };
-  const expectedError = new TypeError('Base is not Iterable');
 
-  metasync.asyncMap(obj, test.mustNotCall(), (err, res) => {
-    test.isError(err, expectedError);
-    test.assertNot(res);
-    test.end();
-  });
+  test.throws(
+    () => metasync.asyncMap(obj, test.mustNotCall(), test.mustNotCall()),
+    new TypeError('Base is not Iterable')
+  );
+
+  test.end();
 });
